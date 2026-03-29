@@ -2,41 +2,110 @@
 <#
 .SYNOPSIS
     Installs the MEP QC Checker Revit plugin for all detected Revit versions.
+
 .DESCRIPTION
     Detects installed Revit versions via registry and copies the correct build
     (net48 for 2020-2024, net8 for 2025-2026) to each user's Revit Addins folder.
     No admin rights required.
+
+.PARAMETER RevitVersion
+    Optional. Install for a specific Revit version only (e.g., 2024).
+    If not specified, installs for all detected versions.
+
+.PARAMETER BuildRoot
+    Optional. Path to the solution root folder. Defaults to parent of installer folder.
+
+.EXAMPLE
+    .\Install.ps1
+    Installs for all detected Revit versions.
+
+.EXAMPLE
+    .\Install.ps1 -RevitVersion 2024
+    Installs for Revit 2024 only.
 #>
 
 param(
+    [int]$RevitVersion = 0,
     [string]$BuildRoot = (Split-Path -Parent $PSScriptRoot)
 )
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "`n=== MEP QC Checker Installer ===" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "============================================" -ForegroundColor Cyan
+Write-Host "  MEP QC Checker — Installer" -ForegroundColor Cyan
+Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Build output paths
-$Net48Output = Join-Path $BuildRoot "src\MEPQCChecker.Revit2024\bin\Release\net48"
-$Net8Output  = Join-Path $BuildRoot "src\MEPQCChecker.Revit2025\bin\Release\net8.0-windows"
+# ── Build output paths ──────────────────────────────────────────────
+$Net48Output   = Join-Path $BuildRoot "src\MEPQCChecker.Revit2024\bin\Release\net48"
+$Net8Output    = Join-Path $BuildRoot "src\MEPQCChecker.Revit2025\bin\Release\net8.0-windows"
 $AddinTemplate = Join-Path $BuildRoot "installer\MEPQCChecker.addin"
 
-# Detect installed Revit versions
-$revitVersions = @()
-$regPaths = @(
-    "HKLM:\SOFTWARE\Autodesk\Revit",
-    "HKLM:\SOFTWARE\WOW6432Node\Autodesk\Revit"
+# ── Verify build exists ─────────────────────────────────────────────
+$hasNet48 = Test-Path $Net48Output
+$hasNet8  = Test-Path $Net8Output
+
+if (-not $hasNet48 -and -not $hasNet8) {
+    Write-Host "ERROR: No build output found." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Please build the solution first:" -ForegroundColor Yellow
+    Write-Host "  cd $BuildRoot" -ForegroundColor White
+    Write-Host "  dotnet build MEPQCChecker.sln -c Release" -ForegroundColor White
+    Write-Host ""
+    exit 1
+}
+
+# ── DLLs that belong to Revit (must NOT be copied) ──────────────────
+$revitOwnedDlls = @(
+    "RevitAPI.dll",
+    "RevitAPIUI.dll",
+    "RevitAPIIFC.dll",
+    "RevitAPIMacros.dll",
+    "AdWindows.dll",
+    "UIFramework.dll",
+    "UIFrameworkServices.dll"
 )
 
-foreach ($regPath in $regPaths) {
-    if (Test-Path $regPath) {
-        Get-ChildItem $regPath -ErrorAction SilentlyContinue | ForEach-Object {
-            $name = $_.PSChildName
-            if ($name -match "(\d{4})") {
-                $year = [int]$Matches[1]
-                if ($year -ge 2020 -and $year -le 2026 -and $revitVersions -notcontains $year) {
-                    $revitVersions += $year
+# ── Detect installed Revit versions ─────────────────────────────────
+$revitVersions = @()
+
+if ($RevitVersion -gt 0) {
+    # User specified a version
+    $revitVersions = @($RevitVersion)
+    Write-Host "Target: Revit $RevitVersion (user-specified)" -ForegroundColor White
+} else {
+    # Auto-detect from registry
+    $regPaths = @(
+        "HKLM:\SOFTWARE\Autodesk\Revit",
+        "HKLM:\SOFTWARE\WOW6432Node\Autodesk\Revit"
+    )
+
+    foreach ($regPath in $regPaths) {
+        if (Test-Path $regPath) {
+            Get-ChildItem $regPath -ErrorAction SilentlyContinue | ForEach-Object {
+                $name = $_.PSChildName
+                if ($name -match "(\d{4})") {
+                    $year = [int]$Matches[1]
+                    if ($year -ge 2020 -and $year -le 2026 -and $revitVersions -notcontains $year) {
+                        $revitVersions += $year
+                    }
+                }
+            }
+        }
+    }
+
+    # Fallback: check existing Addins folders
+    if ($revitVersions.Count -eq 0) {
+        Write-Host "No Revit found in registry. Checking Addins folders..." -ForegroundColor Yellow
+        $addinsBase = Join-Path $env:APPDATA "Autodesk\Revit\Addins"
+        if (Test-Path $addinsBase) {
+            Get-ChildItem $addinsBase -Directory | ForEach-Object {
+                if ($_.Name -match "^(\d{4})$") {
+                    $year = [int]$_.Name
+                    if ($year -ge 2020 -and $year -le 2026) {
+                        $revitVersions += $year
+                    }
                 }
             }
         }
@@ -44,25 +113,13 @@ foreach ($regPath in $regPaths) {
 }
 
 if ($revitVersions.Count -eq 0) {
-    Write-Host "No supported Revit versions (2020-2026) found in registry." -ForegroundColor Yellow
-    Write-Host "Checking standard Addins folders as fallback..." -ForegroundColor Yellow
-
-    # Fallback: check if Addins folders exist
-    $addinsBase = Join-Path $env:APPDATA "Autodesk\Revit\Addins"
-    if (Test-Path $addinsBase) {
-        Get-ChildItem $addinsBase -Directory | ForEach-Object {
-            if ($_.Name -match "^(\d{4})$") {
-                $year = [int]$_.Name
-                if ($year -ge 2020 -and $year -le 2026) {
-                    $revitVersions += $year
-                }
-            }
-        }
-    }
-}
-
-if ($revitVersions.Count -eq 0) {
-    Write-Host "No Revit installations found. Please install Revit first." -ForegroundColor Red
+    Write-Host "ERROR: No Revit installations found (2020-2026)." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Options:" -ForegroundColor Yellow
+    Write-Host "  1. Install Revit first, then re-run this script" -ForegroundColor White
+    Write-Host "  2. Specify a version manually:" -ForegroundColor White
+    Write-Host "     .\Install.ps1 -RevitVersion 2024" -ForegroundColor White
+    Write-Host ""
     exit 1
 }
 
@@ -70,24 +127,31 @@ $revitVersions = $revitVersions | Sort-Object
 Write-Host "Detected Revit versions: $($revitVersions -join ', ')" -ForegroundColor Green
 Write-Host ""
 
+# ── Install for each version ─────────────────────────────────────────
 $installed = 0
 
 foreach ($year in $revitVersions) {
-    Write-Host "Installing for Revit $year..." -ForegroundColor White
+    Write-Host "── Revit $year ──" -ForegroundColor White
 
     # Determine which build to use
     if ($year -le 2024) {
         $sourceDir = $Net48Output
-        $buildName = "net48"
+        $buildName = ".NET Framework 4.8"
+        if (-not $hasNet48) {
+            Write-Host "  SKIP: net48 build not found. Run:" -ForegroundColor Yellow
+            Write-Host "    dotnet build src/MEPQCChecker.Revit2024 -c Release" -ForegroundColor White
+            Write-Host ""
+            continue
+        }
     } else {
         $sourceDir = $Net8Output
-        $buildName = "net8.0-windows"
-    }
-
-    if (-not (Test-Path $sourceDir)) {
-        Write-Host "  WARNING: Build output not found at $sourceDir" -ForegroundColor Yellow
-        Write-Host "  Run 'dotnet build -c Release' first." -ForegroundColor Yellow
-        continue
+        $buildName = ".NET 8"
+        if (-not $hasNet8) {
+            Write-Host "  SKIP: net8 build not found. Run:" -ForegroundColor Yellow
+            Write-Host "    dotnet build src/MEPQCChecker.Revit2025 -c Release" -ForegroundColor White
+            Write-Host ""
+            continue
+        }
     }
 
     # Target paths
@@ -96,53 +160,58 @@ foreach ($year in $revitVersions) {
     $addinFile = Join-Path $addinsDir "MEPQCChecker.addin"
 
     # Create directories
+    if (-not (Test-Path $addinsDir)) {
+        New-Item -ItemType Directory -Path $addinsDir -Force | Out-Null
+    }
     if (-not (Test-Path $pluginDir)) {
         New-Item -ItemType Directory -Path $pluginDir -Force | Out-Null
     }
 
-    # Copy DLLs and config
-    $filesToCopy = @(
-        "MEPQCChecker.Revit.dll",
-        "MEPQCChecker.Core.dll",
-        "config.json"
-    )
-
-    foreach ($file in $filesToCopy) {
-        $src = Join-Path $sourceDir $file
-        if (Test-Path $src) {
-            Copy-Item $src -Destination $pluginDir -Force
-            Write-Host "  Copied $file" -ForegroundColor DarkGray
-        }
+    # Copy plugin DLLs (exclude Revit-owned DLLs)
+    $copiedCount = 0
+    Get-ChildItem $sourceDir -Filter "*.dll" | Where-Object {
+        $revitOwnedDlls -notcontains $_.Name
+    } | ForEach-Object {
+        Copy-Item $_.FullName -Destination $pluginDir -Force
+        Write-Host "  + $($_.Name)" -ForegroundColor DarkGray
+        $copiedCount++
     }
 
-    # Copy System.Text.Json and dependencies (for net48)
-    if ($year -le 2024) {
-        Get-ChildItem $sourceDir -Filter "System.*.dll" | ForEach-Object {
-            Copy-Item $_.FullName -Destination $pluginDir -Force
-            Write-Host "  Copied $($_.Name)" -ForegroundColor DarkGray
-        }
-        Get-ChildItem $sourceDir -Filter "Microsoft.Bcl.*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
-            Copy-Item $_.FullName -Destination $pluginDir -Force
-        }
+    # Copy config.json
+    $configSrc = Join-Path $sourceDir "config.json"
+    if (Test-Path $configSrc) {
+        Copy-Item $configSrc -Destination $pluginDir -Force
+        Write-Host "  + config.json" -ForegroundColor DarkGray
+        $copiedCount++
     }
 
-    # Create .addin manifest (update assembly path)
+    # Create .addin manifest
     if (Test-Path $AddinTemplate) {
         $addinContent = Get-Content $AddinTemplate -Raw
         $addinContent = $addinContent -replace "<Assembly>MEPQCChecker.Revit.dll</Assembly>",
             "<Assembly>MEPQCChecker\MEPQCChecker.Revit.dll</Assembly>"
         Set-Content -Path $addinFile -Value $addinContent -Encoding UTF8
-        Write-Host "  Created .addin manifest" -ForegroundColor DarkGray
+        Write-Host "  + MEPQCChecker.addin (manifest)" -ForegroundColor DarkGray
     }
 
-    Write-Host "  Done ($buildName build)" -ForegroundColor Green
+    Write-Host "  Installed $copiedCount files ($buildName)" -ForegroundColor Green
+    Write-Host "  Location: $pluginDir" -ForegroundColor DarkGray
+    Write-Host ""
     $installed++
 }
 
-Write-Host ""
+# ── Summary ──────────────────────────────────────────────────────────
+Write-Host "============================================" -ForegroundColor Cyan
 if ($installed -gt 0) {
-    Write-Host "Successfully installed for $installed Revit version(s)." -ForegroundColor Green
+    Write-Host "  SUCCESS: Installed for $installed Revit version(s)" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  Next steps:" -ForegroundColor White
+    Write-Host "  1. Restart Revit" -ForegroundColor White
+    Write-Host "  2. Look for 'MEP Tools' tab in the ribbon" -ForegroundColor White
+    Write-Host "  3. Click 'Run QC Check' to scan your model" -ForegroundColor White
 } else {
-    Write-Host "No installations completed. Check build output paths." -ForegroundColor Yellow
+    Write-Host "  No installations completed." -ForegroundColor Yellow
+    Write-Host "  Check the warnings above." -ForegroundColor Yellow
 }
-Write-Host "Restart Revit to load the plugin.`n" -ForegroundColor Cyan
+Write-Host "============================================" -ForegroundColor Cyan
+Write-Host ""

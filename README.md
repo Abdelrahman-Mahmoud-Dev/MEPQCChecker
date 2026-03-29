@@ -4,6 +4,8 @@ A Revit add-in that gives MEP engineers a **single button** to scan their active
 
 ![Build & Test](https://github.com/Abdelrahman-Mahmoud-Dev/MEPQCChecker/actions/workflows/build.yml/badge.svg)
 
+---
+
 ## What It Does
 
 Click **Run QC Check** in the MEP Tools ribbon tab and within seconds see:
@@ -29,134 +31,328 @@ Click **Run QC Check** in the MEP Tools ribbon tab and within seconds see:
 - No multi-model / linked-file clash detection (Phase 2)
 - No automation or standards library modules
 
+---
+
 ## Supported Revit Versions
 
-| Version | Framework | Build Target |
-|---------|-----------|-------------|
-| Revit 2020 - 2024 | .NET Framework 4.8 | `MEPQCChecker.Revit2024` |
-| Revit 2025 - 2026 | .NET 8 | `MEPQCChecker.Revit2025` |
+| Revit Version | Framework | Build Target |
+|---------------|-----------|-------------|
+| 2020, 2021, 2022, 2023, 2024 | .NET Framework 4.8 | `MEPQCChecker.Revit2024` |
+| 2025, 2026 | .NET 8 | `MEPQCChecker.Revit2025` |
+
+---
 
 ## Installation
 
-### Option 1: PowerShell Installer (Recommended)
+### Prerequisites
 
-1. Build the solution in Release mode:
-   ```
-   dotnet build MEPQCChecker.sln -c Release
-   ```
+You need **one** of the following on the machine where you will build the plugin:
 
-2. Run the installer:
-   ```powershell
-   powershell -File installer/Install.ps1
-   ```
+| Tool | Required For | Download |
+|------|-------------|----------|
+| .NET 8 SDK | Building the solution | https://dotnet.microsoft.com/download/dotnet/8.0 |
+| .NET Framework 4.8 Developer Pack | Building the Revit 2020-2024 target | https://dotnet.microsoft.com/download/dotnet-framework/net48 |
 
-   The installer automatically:
-   - Detects installed Revit versions from the registry
-   - Copies the correct build (net48 or net8) for each version
-   - Creates the `.addin` manifest in `%AppData%\Autodesk\Revit\Addins\{year}\`
-   - **No admin rights required** — installs to per-user AppData
+You do **NOT** need Visual Studio — the `dotnet` CLI is sufficient.
 
-3. Restart Revit.
+### Step 1: Clone the Repository
 
-### Option 2: Manual Installation
+```bash
+git clone https://github.com/Abdelrahman-Mahmoud-Dev/MEPQCChecker.git
+cd MEPQCChecker
+```
 
-1. Build the solution in Release mode.
+### Step 2: Build in Release Mode
 
-2. Copy the appropriate build output to a folder:
-   - For Revit 2020-2024: `src/MEPQCChecker.Revit2024/bin/Release/net48/`
-   - For Revit 2025-2026: `src/MEPQCChecker.Revit2025/bin/Release/net8.0-windows/`
+```bash
+dotnet build MEPQCChecker.sln -c Release
+```
 
-3. Create a folder at:
-   ```
-   %AppData%\Autodesk\Revit\Addins\{year}\MEPQCChecker\
-   ```
+Expected output — all 4 projects should build successfully:
+```
+MEPQCChecker.Core        -> ...\bin\Release\netstandard2.0\MEPQCChecker.Core.dll
+MEPQCChecker.Core.Tests  -> ...\bin\Release\net8.0\MEPQCChecker.Core.Tests.dll
+MEPQCChecker.Revit2024   -> ...\bin\Release\net48\MEPQCChecker.Revit.dll
+MEPQCChecker.Revit2025   -> ...\bin\Release\net8.0-windows\MEPQCChecker.Revit.dll
+```
 
-4. Copy these files into it:
-   - `MEPQCChecker.Revit.dll`
-   - `MEPQCChecker.Core.dll`
-   - `config.json`
-   - All `System.*.dll` files (for Revit 2020-2024 only)
+### Step 3: Install the Plugin
 
-5. Copy `installer/MEPQCChecker.addin` to:
-   ```
-   %AppData%\Autodesk\Revit\Addins\{year}\MEPQCChecker.addin
-   ```
-   Edit the `<Assembly>` path to point to `MEPQCChecker\MEPQCChecker.Revit.dll`.
+#### Option A: Automated Installer (Recommended)
 
-6. Restart Revit.
+Open **PowerShell** and run:
+
+```powershell
+# Install for all detected Revit versions
+powershell -ExecutionPolicy Bypass -File installer\Install.ps1
+
+# Or install for a specific version only
+powershell -ExecutionPolicy Bypass -File installer\Install.ps1 -RevitVersion 2024
+```
+
+The installer will:
+1. Detect your installed Revit versions from the Windows registry
+2. Select the correct build (`net48` for 2020-2024, `net8` for 2025-2026)
+3. Copy plugin files to `%AppData%\Autodesk\Revit\Addins\{year}\MEPQCChecker\`
+4. Create the `.addin` manifest file
+5. Print a summary of what was installed
+
+**No admin rights required** — everything goes to your user profile.
+
+Example output:
+```
+============================================
+  MEP QC Checker — Installer
+============================================
+
+Detected Revit versions: 2023, 2024, 2025
+
+── Revit 2023 ──
+  + MEPQCChecker.Core.dll
+  + MEPQCChecker.Revit.dll
+  + System.Text.Json.dll
+  + config.json
+  + MEPQCChecker.addin (manifest)
+  Installed 8 files (.NET Framework 4.8)
+  Location: C:\Users\You\AppData\Roaming\Autodesk\Revit\Addins\2023\MEPQCChecker
+
+── Revit 2025 ──
+  + MEPQCChecker.Core.dll
+  + MEPQCChecker.Revit.dll
+  + config.json
+  + MEPQCChecker.addin (manifest)
+  Installed 3 files (.NET 8)
+  Location: C:\Users\You\AppData\Roaming\Autodesk\Revit\Addins\2025\MEPQCChecker
+
+============================================
+  SUCCESS: Installed for 3 Revit version(s)
+============================================
+```
+
+#### Option B: Manual Installation
+
+If the automated installer doesn't work or you prefer manual control:
+
+**1. Locate the build output:**
+
+| Your Revit Version | Copy files from |
+|--------------------|----------------|
+| 2020, 2021, 2022, 2023, 2024 | `src\MEPQCChecker.Revit2024\bin\Release\net48\` |
+| 2025, 2026 | `src\MEPQCChecker.Revit2025\bin\Release\net8.0-windows\` |
+
+**2. Create the plugin folder:**
+
+```
+%AppData%\Autodesk\Revit\Addins\{year}\MEPQCChecker\
+```
+
+For example, for Revit 2024:
+```
+C:\Users\YourName\AppData\Roaming\Autodesk\Revit\Addins\2024\MEPQCChecker\
+```
+
+**3. Copy these files** from the build output into the plugin folder:
+
+| File | Required | Notes |
+|------|----------|-------|
+| `MEPQCChecker.Revit.dll` | Yes | Main plugin DLL |
+| `MEPQCChecker.Core.dll` | Yes | Business logic |
+| `config.json` | Yes | Check configuration |
+| `System.Text.Json.dll` | net48 only | JSON parsing (Revit 2020-2024) |
+| `System.Memory.dll` | net48 only | Dependency |
+| `System.Buffers.dll` | net48 only | Dependency |
+| `System.Runtime.CompilerServices.Unsafe.dll` | net48 only | Dependency |
+| `System.Numerics.Vectors.dll` | net48 only | Dependency |
+| `System.Text.Encodings.Web.dll` | net48 only | Dependency |
+| `System.Threading.Tasks.Extensions.dll` | net48 only | Dependency |
+| `System.ValueTuple.dll` | net48 only | Dependency |
+| `Microsoft.Bcl.AsyncInterfaces.dll` | net48 only | Dependency |
+
+**DO NOT copy** these (they belong to Revit):
+- `RevitAPI.dll`
+- `RevitAPIUI.dll`
+- `AdWindows.dll`
+- `UIFramework.dll`
+
+**4. Create the `.addin` manifest file:**
+
+Copy `installer\MEPQCChecker.addin` to:
+```
+%AppData%\Autodesk\Revit\Addins\{year}\MEPQCChecker.addin
+```
+
+Then edit the `<Assembly>` line to:
+```xml
+<Assembly>MEPQCChecker\MEPQCChecker.Revit.dll</Assembly>
+```
+
+The final manifest should look like:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>MEP QC Checker</Name>
+    <Assembly>MEPQCChecker\MEPQCChecker.Revit.dll</Assembly>
+    <FullClassName>MEPQCChecker.Revit.App</FullClassName>
+    <ClientId>B7E3F1A2-4C8D-4F9E-A6B5-1D2E3F4A5B6C</ClientId>
+    <VendorId>MEPTools</VendorId>
+    <VendorDescription>MEP QC Checker Plugin</VendorDescription>
+  </AddIn>
+</RevitAddIns>
+```
+
+**5. Verify your folder structure:**
+
+```
+%AppData%\Autodesk\Revit\Addins\2024\
+├── MEPQCChecker.addin                    <-- manifest (in Addins root)
+└── MEPQCChecker\                         <-- plugin folder
+    ├── MEPQCChecker.Revit.dll
+    ├── MEPQCChecker.Core.dll
+    ├── config.json
+    ├── System.Text.Json.dll              (net48 only)
+    ├── System.Memory.dll                 (net48 only)
+    └── ... other System.*.dll            (net48 only)
+```
+
+### Step 4: Restart Revit
+
+Close and reopen Revit. You should see the **"MEP Tools"** tab in the ribbon.
+
+### Troubleshooting Installation
+
+| Problem | Solution |
+|---------|----------|
+| "MEP Tools" tab doesn't appear | Check that the `.addin` file is in the correct Addins folder and the `<Assembly>` path is correct |
+| Revit shows "assembly not found" error | Make sure ALL required DLLs are in the `MEPQCChecker\` subfolder |
+| Plugin loads but crashes | Check the log file at `MEPQCChecker\MEPQCChecker.log` next to the DLL |
+| "Could not load file or assembly 'System.Text.Json'" | You're missing dependency DLLs — copy ALL `System.*.dll` files from the build output (net48 only) |
+| Installer says "No Revit installations found" | Use `-RevitVersion 2024` parameter to specify your version manually |
+| "Execution of scripts is disabled" error | Run: `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser` |
 
 ### Uninstall
 
 ```powershell
-powershell -File installer/Uninstall.ps1
+powershell -ExecutionPolicy Bypass -File installer\Uninstall.ps1
 ```
+
+Or manually delete:
+- `%AppData%\Autodesk\Revit\Addins\{year}\MEPQCChecker\` folder
+- `%AppData%\Autodesk\Revit\Addins\{year}\MEPQCChecker.addin` file
+
+---
 
 ## Usage
 
-1. Open a Revit model containing MEP elements.
-2. Go to the **MEP Tools** tab in the ribbon.
-3. Click **Run QC Check**.
-4. Review results in the docked dashboard panel:
-   - **Summary cards** show Critical / Warning / Info counts
-   - **Filter** by discipline (Mechanical, Plumbing, Fire Protection) or severity
-   - **Click any issue** to zoom to and select the element in the model
-5. Elements with issues are highlighted in the 3D view:
-   - **Red** = Critical (clashes, safety issues)
-   - **Amber** = Warning (missing data, slope violations)
-6. Click **Clear Highlights** to remove all color overrides.
+### Running a QC Check
+
+1. Open a Revit model containing MEP elements (ducts, pipes, sprinklers, etc.)
+2. Go to the **MEP Tools** tab in the ribbon
+3. Click **Run QC Check**
+4. Wait a few seconds while the model is scanned
+5. A summary dialog shows the results:
+   ```
+   QC Check Complete
+
+   Critical: 12
+   Warning: 45
+   Info: 8
+   Total: 65 issues found
+   ```
+
+### Reviewing Results
+
+- The **dashboard panel** (docked right) shows:
+  - **Summary cards** — Critical (red), Warning (amber), Info (gray) counts
+  - **Filter dropdowns** — filter by Discipline or Severity
+  - **Issue list** — every issue with check type, description, element ID, and level
+- **Click any issue** in the list to zoom to and select the element in the model
+- Elements are **color-coded in the 3D view**:
+  - **Red** = Critical (clashes, wrong pipe direction, missing sprinkler data)
+  - **Amber** = Warning (missing parameters, excessive slope)
+
+### Clearing Results
+
+Click **Clear Highlights** in the ribbon to remove all color overrides from the view.
+
+---
 
 ## Configuration
 
-Edit `config.json` (located next to the DLL) to customize check behavior **without recompiling**.
+Edit `config.json` (located in the `MEPQCChecker\` folder next to the DLL) to customize check behavior **without recompiling**.
+
+After editing, just re-run the QC check — no Revit restart needed.
 
 ### Required Parameters
 
-Define which parameters must be filled for each element category:
+Define which parameters must be filled for each Revit element category:
 
 ```json
 {
   "RequiredParameters": {
     "OST_DuctCurves": [
-      { "Name": "System Name", "Severity": "Warning" },
-      { "Name": "Flow", "Severity": "Warning" }
+      { "Name": "System Name",           "Severity": "Warning" },
+      { "Name": "System Classification", "Severity": "Warning" },
+      { "Name": "Insulation Type",       "Severity": "Info" },
+      { "Name": "Flow",                  "Severity": "Warning" }
     ],
     "OST_Sprinklers": [
-      { "Name": "System Name", "Severity": "Critical" },
-      { "Name": "Head Type", "Severity": "Critical" }
+      { "Name": "System Name",     "Severity": "Critical" },
+      { "Name": "Head Type",       "Severity": "Critical" },
+      { "Name": "Coverage Radius", "Severity": "Warning" },
+      { "Name": "Flow",            "Severity": "Warning" }
     ]
   }
 }
 ```
+
+Severity values: `"Critical"`, `"Warning"`, `"Info"`
+
+Available categories: `OST_DuctCurves`, `OST_DuctFitting`, `OST_PipeCurves`, `OST_PipeFitting`, `OST_Sprinklers`, `OST_MechanicalEquipment`, `OST_PlumbingFixtures`
 
 ### Pipe Slope Thresholds
 
 ```json
 {
   "PipeSlope": {
-    "MinSlopePctLargePipe": 1.0,
-    "MinSlopePctSmallPipe": 2.0,
-    "MaxSlopePct": 15.0,
+    "MinSlopePctLargePipe":  1.0,
+    "MinSlopePctSmallPipe":  2.0,
+    "MaxSlopePct":          15.0,
     "SmallPipeThresholdMM": 50
   }
 }
 ```
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `MinSlopePctLargePipe` | 1.0% | Minimum slope for pipes >= 50mm diameter |
+| `MinSlopePctSmallPipe` | 2.0% | Minimum slope for pipes < 50mm diameter |
+| `MaxSlopePct` | 15.0% | Maximum slope before warning |
+| `SmallPipeThresholdMM` | 50 | Diameter threshold in mm |
 
 ### Sprinkler Coverage
 
 ```json
 {
   "SprinklerCoverage": {
-    "DefaultCoverageRadiusM": 2.25,
-    "CriticalUncoveredPct": 5.0,
-    "WarningUncoveredPct": 1.0,
+    "DefaultCoverageRadiusM":  2.25,
+    "CriticalUncoveredPct":    5.0,
+    "WarningUncoveredPct":     1.0,
     "GridSamplingResolutionM": 0.5
   }
 }
 ```
 
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `DefaultCoverageRadiusM` | 2.25m | Coverage radius per sprinkler head |
+| `CriticalUncoveredPct` | 5% | Room uncovered area % that triggers Critical |
+| `WarningUncoveredPct` | 1% | Room uncovered area % that triggers Warning |
+| `GridSamplingResolutionM` | 0.5m | Grid sampling resolution (lower = more accurate but slower) |
+
 ### Gravity-Drained Systems
 
-Only these system names are checked for pipe slope:
+Only pipes with these system names are checked for slope:
 
 ```json
 {
@@ -165,6 +361,10 @@ Only these system names are checked for pipe slope:
   ]
 }
 ```
+
+Add or remove system names to match your project naming conventions.
+
+---
 
 ## Project Structure
 
@@ -193,22 +393,28 @@ MEPQCChecker.sln
     └── build.yml                   # CI pipeline
 ```
 
+---
+
 ## Building from Source
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [.NET Framework 4.8 Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net48) (for Revit 2020-2024 build)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (required)
+- [.NET Framework 4.8 Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net48) (required for Revit 2020-2024 build)
+- Git
 
 ### Build
 
 ```bash
+git clone https://github.com/Abdelrahman-Mahmoud-Dev/MEPQCChecker.git
+cd MEPQCChecker
+
 # Build everything
 dotnet build MEPQCChecker.sln -c Release
 
-# Build specific target
-dotnet build src/MEPQCChecker.Revit2024 -c Release   # net48
-dotnet build src/MEPQCChecker.Revit2025 -c Release   # net8
+# Or build a specific target
+dotnet build src/MEPQCChecker.Revit2024 -c Release   # Revit 2020-2024
+dotnet build src/MEPQCChecker.Revit2025 -c Release   # Revit 2025-2026
 ```
 
 ### Test
@@ -217,19 +423,47 @@ dotnet build src/MEPQCChecker.Revit2025 -c Release   # net8
 dotnet test tests/MEPQCChecker.Core.Tests --verbosity normal
 ```
 
-All 41 tests run without Revit installed — the Core project has zero Revit API dependency.
+All 41 tests run **without Revit installed** — the Core project has zero Revit API dependency.
+
+---
 
 ## Architecture
 
 The key design principle is **Core separation**:
 
-- **`MEPQCChecker.Core`** contains all check logic and operates on a `RevitModelSnapshot` — a plain C# object with no Revit types. This makes all business logic unit-testable without Revit.
+```
+   Revit Application
+        │
+        ▼
+┌─────────────────────┐
+│  RevitModelAdapter   │  ← Only class that touches Revit API
+│  (reads model →      │    Converts feet → metres
+│   builds snapshot)   │
+└────────┬────────────┘
+         │  RevitModelSnapshot (plain C# object)
+         ▼
+┌─────────────────────┐
+│  CheckRunner         │  ← Pure C#, no Revit dependency
+│  ├─ ClashDetector    │    Runs all 5 checks
+│  ├─ UnconnectedChk   │    Returns QCReport
+│  ├─ MissingParamChk  │
+│  ├─ PipeSlopeChk     │
+│  └─ SprinklerCovChk  │
+└────────┬────────────┘
+         │  QCReport
+         ▼
+┌─────────────────────┐
+│  ColorOverrideService│  ← Applies red/amber highlights
+│  QCDashboardPanel    │  ← WPF panel with results
+└─────────────────────┘
+```
 
-- **`RevitModelAdapter`** is the **only class** that touches the Revit API. It reads the live model and builds the snapshot, converting all units from Revit internal (feet) to metric (metres).
+- **`MEPQCChecker.Core`** contains all check logic and operates on `RevitModelSnapshot` — making everything unit-testable without Revit.
+- **`RevitModelAdapter`** is the **only class** that touches the Revit API.
+- The **WPF dashboard** never calls Revit API directly — uses `IExternalEventHandler` for thread safety.
+- **`MEPQCChecker.Revit/`** is a shared source folder. Both build targets link to these files.
 
-- **`MEPQCChecker.Revit/`** is a shared source folder. Both `Revit2024` (net48) and `Revit2025` (net8) link to these files, producing `MEPQCChecker.Revit.dll` for their respective frameworks.
-
-- The **WPF dashboard** never calls Revit API directly. Click-to-zoom uses `IExternalEventHandler` + `ExternalEvent.Raise()` for thread safety.
+---
 
 ## Roadmap
 
