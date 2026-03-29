@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>MEPQCChecker.Revit</AssemblyName>
+    <RootNamespace>MEPQCChecker.Revit</RootNamespace>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseWPF>true</UseWPF>
+    <DefineConstants>REVIT2024</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2024.0.0" />
+    <ProjectReference Include="..\MEPQCChecker.Core\MEPQCChecker.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\MEPQCChecker.Revit\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Include="..\MEPQCChecker.Revit\**\*.xaml" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

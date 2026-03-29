@@ -1,0 +1,53 @@
+{
+  "RequiredParameters": {
+    "OST_DuctCurves": [
+      { "Name": "System Name",           "Severity": "Warning" },
+      { "Name": "System Classification", "Severity": "Warning" },
+      { "Name": "Insulation Type",        "Severity": "Info"    },
+      { "Name": "Flow",                   "Severity": "Warning" }
+    ],
+    "OST_DuctFitting": [
+      { "Name": "System Name", "Severity": "Info" }
+    ],
+    "OST_PipeCurves": [
+      { "Name": "System Name",           "Severity": "Warning" },
+      { "Name": "System Classification", "Severity": "Warning" },
+      { "Name": "Pipe Material",          "Severity": "Warning" },
+      { "Name": "Outside Diameter",       "Severity": "Warning" },
+      { "Name": "Insulation Type",        "Severity": "Info"    }
+    ],
+    "OST_PipeFitting": [
+      { "Name": "System Name", "Severity": "Info" }
+    ],
+    "OST_Sprinklers": [
+      { "Name": "System Name",     "Severity": "Critical" },
+      { "Name": "Head Type",       "Severity": "Critical" },
+      { "Name": "Coverage Radius", "Severity": "Warning"  },
+      { "Name": "Flow",            "Severity": "Warning"  }
+    ],
+    "OST_MechanicalEquipment": [
+      { "Name": "System Name",   "Severity": "Warning" },
+      { "Name": "Manufacturer",  "Severity": "Warning" },
+      { "Name": "Model",         "Severity": "Warning" }
+    ],
+    "OST_PlumbingFixtures": [
+      { "Name": "System Name",   "Severity": "Warning" },
+      { "Name": "Fixture Type",  "Severity": "Warning" }
+    ]
+  },
+  "PipeSlope": {
+    "MinSlopePctLargePipe":  1.0,
+    "MinSlopePctSmallPipe":  2.0,
+    "MaxSlopePct":          15.0,
+    "SmallPipeThresholdMM": 50
+  },
+  "SprinklerCoverage": {
+    "DefaultCoverageRadiusM":  2.25,
+    "CriticalUncoveredPct":    5.0,
+    "WarningUncoveredPct":     1.0,
+    "GridSamplingResolutionM": 0.5
+  },
+  "GravityDrainedSystemNames": [
+    "Sanitary", "Vent", "Storm Drain", "Domestic Cold Water Return"
+  ]
+}

@@ -1,0 +1,33 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore packages
+        run: dotnet restore MEPQCChecker.sln
+
+      - name: Build Core
+        run: dotnet build src/MEPQCChecker.Core/MEPQCChecker.Core.csproj -c Release --no-restore
+
+      - name: Build Revit 2024 (net48)
+        run: dotnet build src/MEPQCChecker.Revit2024/MEPQCChecker.Revit2024.csproj -c Release --no-restore
+
+      - name: Build Revit 2025 (net8)
+        run: dotnet build src/MEPQCChecker.Revit2025/MEPQCChecker.Revit2025.csproj -c Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test tests/MEPQCChecker.Core.Tests/MEPQCChecker.Core.Tests.csproj -c Release --verbosity normal

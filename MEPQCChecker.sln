@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{330E4CF5-A689-4D8E-940E-1A633C8541E6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MEPQCChecker.Core", "src\MEPQCChecker.Core\MEPQCChecker.Core.csproj", "{DFAACC6C-AA6E-4B80-9033-1D8B141D3E3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MEPQCChecker.Revit2024", "src\MEPQCChecker.Revit2024\MEPQCChecker.Revit2024.csproj", "{062339C3-DBB1-4F71-9C6E-CBACE534404D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MEPQCChecker.Revit2025", "src\MEPQCChecker.Revit2025\MEPQCChecker.Revit2025.csproj", "{00CADE2A-7EDF-40F8-B8EA-249F17A27C70}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{8446D8CA-A875-4CBA-8740-B248D2DDA920}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MEPQCChecker.Core.Tests", "tests\MEPQCChecker.Core.Tests\MEPQCChecker.Core.Tests.csproj", "{61AEFCB6-4299-461A-A200-BE06E616C85A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DFAACC6C-AA6E-4B80-9033-1D8B141D3E3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFAACC6C-AA6E-4B80-9033-1D8B141D3E3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFAACC6C-AA6E-4B80-9033-1D8B141D3E3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFAACC6C-AA6E-4B80-9033-1D8B141D3E3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{062339C3-DBB1-4F71-9C6E-CBACE534404D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{062339C3-DBB1-4F71-9C6E-CBACE534404D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{062339C3-DBB1-4F71-9C6E-CBACE534404D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{062339C3-DBB1-4F71-9C6E-CBACE534404D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00CADE2A-7EDF-40F8-B8EA-249F17A27C70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00CADE2A-7EDF-40F8-B8EA-249F17A27C70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00CADE2A-7EDF-40F8-B8EA-249F17A27C70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00CADE2A-7EDF-40F8-B8EA-249F17A27C70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61AEFCB6-4299-461A-A200-BE06E616C85A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61AEFCB6-4299-461A-A200-BE06E616C85A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61AEFCB6-4299-461A-A200-BE06E616C85A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61AEFCB6-4299-461A-A200-BE06E616C85A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DFAACC6C-AA6E-4B80-9033-1D8B141D3E3A} = {330E4CF5-A689-4D8E-940E-1A633C8541E6}
+		{062339C3-DBB1-4F71-9C6E-CBACE534404D} = {330E4CF5-A689-4D8E-940E-1A633C8541E6}
+		{00CADE2A-7EDF-40F8-B8EA-249F17A27C70} = {330E4CF5-A689-4D8E-940E-1A633C8541E6}
+		{61AEFCB6-4299-461A-A200-BE06E616C85A} = {8446D8CA-A875-4CBA-8740-B248D2DDA920}
+	EndGlobalSection
+EndGlobal

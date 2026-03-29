@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>MEP QC Checker</Name>
+    <Assembly>MEPQCChecker.Revit.dll</Assembly>
+    <FullClassName>MEPQCChecker.Revit.App</FullClassName>
+    <ClientId>B7E3F1A2-4C8D-4F9E-A6B5-1D2E3F4A5B6C</ClientId>
+    <VendorId>MEPTools</VendorId>
+    <VendorDescription>MEP QC Checker Plugin</VendorDescription>
+  </AddIn>
+</RevitAddIns>
