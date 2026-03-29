@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MEPQCChecker.Core.Models
 {
@@ -16,5 +17,10 @@ namespace MEPQCChecker.Core.Models
         public double? MeasuredValue { get; set; }
         public double? RequiredValue { get; set; }
         public string? ParameterName { get; set; }
+        public string? SourceModelId { get; set; }
+        public string? SourceModelName { get; set; }
+        public string? SourceModelId2 { get; set; }
+        public string? SourceModelName2 { get; set; }
+        public List<FixProposal> FixProposals { get; set; } = new List<FixProposal>();
     }
 }

@@ -10,5 +10,6 @@ namespace MEPQCChecker.Core.Models
         public List<MEPElement> Elements { get; set; } = new List<MEPElement>();
         public List<RoomData> Rooms { get; set; } = new List<RoomData>();
         public List<LevelData> Levels { get; set; } = new List<LevelData>();
+        public List<LinkedModelInfo> LinkedModels { get; set; } = new List<LinkedModelInfo>();
     }
 }

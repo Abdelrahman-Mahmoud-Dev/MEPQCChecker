@@ -13,5 +13,7 @@ namespace MEPQCChecker.Core.Models
         public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
         public bool IsStructural { get; set; }
         public GeometryData? Geometry { get; set; }
+        public string? SourceModelId { get; set; }
+        public string? SourceModelName { get; set; }
     }
 }
