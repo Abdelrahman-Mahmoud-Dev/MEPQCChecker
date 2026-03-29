@@ -83,11 +83,17 @@ MEPQCChecker.Revit2025   -> ...\bin\Release\net8.0-windows\MEPQCChecker.Revit.dl
 Open **PowerShell** and run:
 
 ```powershell
+# Run from the repository root folder:
+cd E:\MEPQCChecker
+
 # Install for all detected Revit versions
 powershell -ExecutionPolicy Bypass -File installer\Install.ps1
 
 # Or install for a specific version only
 powershell -ExecutionPolicy Bypass -File installer\Install.ps1 -RevitVersion 2024
+
+# Or explicitly pass the solution root path (works from any directory)
+powershell -ExecutionPolicy Bypass -File E:\MEPQCChecker\installer\Install.ps1 -BuildRoot E:\MEPQCChecker
 ```
 
 The installer will:
@@ -228,6 +234,8 @@ Close and reopen Revit. You should see the **"MEP Tools"** tab in the ribbon.
 | Plugin loads but crashes | Check the log file at `MEPQCChecker\MEPQCChecker.log` next to the DLL |
 | "Could not load file or assembly 'System.Text.Json'" | You're missing dependency DLLs — copy ALL `System.*.dll` files from the build output (net48 only) |
 | Installer says "No Revit installations found" | Use `-RevitVersion 2024` parameter to specify your version manually |
+| Installer error "Cannot bind argument to parameter 'Path'" | Run from the repo root: `cd E:\MEPQCChecker` then `.\installer\Install.ps1`, or use `-BuildRoot E:\MEPQCChecker` |
+| Installer says "Cannot find MEPQCChecker.sln" | You're running from the wrong folder. `cd` to the repo root first |
 | "Execution of scripts is disabled" error | Run: `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser` |
 
 ### Uninstall

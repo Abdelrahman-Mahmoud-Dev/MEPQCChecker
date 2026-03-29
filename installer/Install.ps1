@@ -26,15 +26,53 @@
 
 param(
     [int]$RevitVersion = 0,
-    [string]$BuildRoot = (Split-Path -Parent $PSScriptRoot)
+    [string]$BuildRoot = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+# ── Resolve BuildRoot ───────────────────────────────────────────────
+# $PSScriptRoot can be empty when invoked certain ways, so we try multiple fallbacks
+if ([string]::IsNullOrEmpty($BuildRoot)) {
+    # Try 1: $PSScriptRoot (works when dot-sourced or run directly)
+    if (-not [string]::IsNullOrEmpty($PSScriptRoot)) {
+        $BuildRoot = Split-Path -Parent $PSScriptRoot
+    }
+    # Try 2: $MyInvocation (works with powershell -File)
+    elseif (-not [string]::IsNullOrEmpty($MyInvocation.MyCommand.Path)) {
+        $BuildRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+    }
+    # Try 3: Current directory
+    else {
+        $BuildRoot = Get-Location
+        # Check if we're inside the installer folder
+        if ((Split-Path -Leaf $BuildRoot) -eq "installer") {
+            $BuildRoot = Split-Path -Parent $BuildRoot
+        }
+    }
+}
+
+# Verify BuildRoot looks correct
+if (-not (Test-Path (Join-Path $BuildRoot "MEPQCChecker.sln") -ErrorAction SilentlyContinue)) {
+    # Maybe user is running from the repo root
+    if (Test-Path (Join-Path (Get-Location) "MEPQCChecker.sln") -ErrorAction SilentlyContinue) {
+        $BuildRoot = Get-Location
+    }
+    else {
+        Write-Host "ERROR: Cannot find MEPQCChecker.sln" -ForegroundColor Red
+        Write-Host "Run this script from the repository root, or pass -BuildRoot:" -ForegroundColor Yellow
+        Write-Host "  .\installer\Install.ps1 -BuildRoot C:\path\to\MEPQCChecker" -ForegroundColor White
+        Write-Host ""
+        exit 1
+    }
+}
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  MEP QC Checker — Installer" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Solution root: $BuildRoot" -ForegroundColor DarkGray
 Write-Host ""
 
 # ── Build output paths ──────────────────────────────────────────────
