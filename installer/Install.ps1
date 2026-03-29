@@ -31,7 +31,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# ── Resolve BuildRoot ───────────────────────────────────────────────
+# --- Resolve BuildRoot -----------------------------------------------
 # $PSScriptRoot can be empty when invoked certain ways, so we try multiple fallbacks
 if ([string]::IsNullOrEmpty($BuildRoot)) {
     # Try 1: $PSScriptRoot (works when dot-sourced or run directly)
@@ -44,7 +44,7 @@ if ([string]::IsNullOrEmpty($BuildRoot)) {
     }
     # Try 3: Current directory
     else {
-        $BuildRoot = Get-Location
+        $BuildRoot = (Get-Location).Path
         # Check if we're inside the installer folder
         if ((Split-Path -Leaf $BuildRoot) -eq "installer") {
             $BuildRoot = Split-Path -Parent $BuildRoot
@@ -53,10 +53,12 @@ if ([string]::IsNullOrEmpty($BuildRoot)) {
 }
 
 # Verify BuildRoot looks correct
-if (-not (Test-Path (Join-Path $BuildRoot "MEPQCChecker.sln") -ErrorAction SilentlyContinue)) {
+$slnPath = Join-Path $BuildRoot "MEPQCChecker.sln"
+if (-not (Test-Path $slnPath)) {
     # Maybe user is running from the repo root
-    if (Test-Path (Join-Path (Get-Location) "MEPQCChecker.sln") -ErrorAction SilentlyContinue) {
-        $BuildRoot = Get-Location
+    $cwdSln = Join-Path (Get-Location).Path "MEPQCChecker.sln"
+    if (Test-Path $cwdSln) {
+        $BuildRoot = (Get-Location).Path
     }
     else {
         Write-Host "ERROR: Cannot find MEPQCChecker.sln" -ForegroundColor Red
@@ -69,18 +71,18 @@ if (-not (Test-Path (Join-Path $BuildRoot "MEPQCChecker.sln") -ErrorAction Silen
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  MEP QC Checker — Installer" -ForegroundColor Cyan
+Write-Host "  MEP QC Checker - Installer" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Solution root: $BuildRoot" -ForegroundColor DarkGray
 Write-Host ""
 
-# ── Build output paths ──────────────────────────────────────────────
+# --- Build output paths ----------------------------------------------
 $Net48Output   = Join-Path $BuildRoot "src\MEPQCChecker.Revit2024\bin\Release\net48"
 $Net8Output    = Join-Path $BuildRoot "src\MEPQCChecker.Revit2025\bin\Release\net8.0-windows"
 $AddinTemplate = Join-Path $BuildRoot "installer\MEPQCChecker.addin"
 
-# ── Verify build exists ─────────────────────────────────────────────
+# --- Verify build exists ---------------------------------------------
 $hasNet48 = Test-Path $Net48Output
 $hasNet8  = Test-Path $Net8Output
 
@@ -94,7 +96,7 @@ if (-not $hasNet48 -and -not $hasNet8) {
     exit 1
 }
 
-# ── DLLs that belong to Revit (must NOT be copied) ──────────────────
+# --- DLLs that belong to Revit (must NOT be copied) ------------------
 $revitOwnedDlls = @(
     "RevitAPI.dll",
     "RevitAPIUI.dll",
@@ -105,7 +107,7 @@ $revitOwnedDlls = @(
     "UIFrameworkServices.dll"
 )
 
-# ── Detect installed Revit versions ─────────────────────────────────
+# --- Detect installed Revit versions ---------------------------------
 $revitVersions = @()
 
 if ($RevitVersion -gt 0) {
@@ -165,11 +167,11 @@ $revitVersions = $revitVersions | Sort-Object
 Write-Host "Detected Revit versions: $($revitVersions -join ', ')" -ForegroundColor Green
 Write-Host ""
 
-# ── Install for each version ─────────────────────────────────────────
+# --- Install for each version ----------------------------------------
 $installed = 0
 
 foreach ($year in $revitVersions) {
-    Write-Host "── Revit $year ──" -ForegroundColor White
+    Write-Host "--- Revit $year ---" -ForegroundColor White
 
     # Determine which build to use
     if ($year -le 2024) {
@@ -238,7 +240,7 @@ foreach ($year in $revitVersions) {
     $installed++
 }
 
-# ── Summary ──────────────────────────────────────────────────────────
+# --- Summary ---------------------------------------------------------
 Write-Host "============================================" -ForegroundColor Cyan
 if ($installed -gt 0) {
     Write-Host "  SUCCESS: Installed for $installed Revit version(s)" -ForegroundColor Green
